@@ -1,0 +1,4 @@
+name: Download
+debug: false
+files:
+  - name: src/download.ps1
