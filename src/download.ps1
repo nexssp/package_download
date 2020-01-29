@@ -29,7 +29,8 @@ if ( ! ( Test-Path $downloadsFolder)) {
 }
 
 $wc = New-Object System.Net.WebClient  
-foreach ($sourceFile in $NexssStdout._) { 
+$downloadedPaths = @()
+foreach ($sourceFile in $NexssStdout.files) { 
     if (!(isURIWeb($sourceFile))) {
         Write-Host "NEXSS DOWNLOAD: This is not url: $sourceFile"
         exit;
@@ -56,8 +57,8 @@ foreach ($sourceFile in $NexssStdout._) {
     $downloadedPaths += $targetPath
 } 
 
-$NexssStdout | Add-Member -Force -NotePropertyMembers  @{downloadedPaths = "$downloadedPaths" }
+$NexssStdout | Add-Member -Force -NotePropertyMembers  @{downloadedPaths = $downloadedPaths }
 
-$NexssStdout | Add-Member -Force -NotePropertyMembers  @{"_" = @() }
+$NexssStdout | Add-Member -Force -NotePropertyMembers  @{"files" = @() }
 # STDOUT
 Write-Host 	(ConvertTo-Json -Compress $NexssStdout)

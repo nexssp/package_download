@@ -6,7 +6,7 @@ Downloads files from Web.
 
 ```sh
 # downloads to files to the currentfolder/downloads
-nexss download https://www.nexss.com/images/Nexss.png https://www.nexss.com/assets/images/nexss_computer_planting_final_prototype.jpg --debug
+nexss Download --files=https://prdownloads.sourceforge.net/tcl/tcl8610-src.zip --files=https://prdownloads.sourceforge.net/tcl/tk8610-src.zip --files=https://core.tcl-lang.org/tcllib/uv/tcllib-1.19.zip --cache
 
 # if you add --cache it will download to the ${env:NEXSS_CACHE_PATH}/downloads
 # 'downloads' is setup in the config.env
