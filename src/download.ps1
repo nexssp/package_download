@@ -9,7 +9,7 @@ $NexssStdout = $NexssStdin | ConvertFrom-Json
 
 # $env:NEXSS_CACHE_PATH - is default nexss env folder
 # $env:DOWNLOAD_FOLDER - is specified in the config.env of this module
-if ($NexssStdout.cache) {
+if ($NexssStdout.downloadPathCache) {
     $downloadsFolder = "$env:NEXSS_CACHE_PATH\$env:DOWNLOAD_FOLDER\"
 }
 else {
@@ -32,7 +32,7 @@ if ( ! ( Test-Path $downloadsFolder)) {
 $wc = New-Object System.Net.WebClient  
 $downloadedPaths = @()
 $total = $NexssStdout.files.Count
-[Console]::Error.WriteLine("NEXSS/info:Starting Download..")
+[Console]::Error.WriteLine("NEXSS/info:Starting Download $total files(s)..")
 if ($total -eq 0) {
     [Console]::Error.WriteLine("NEXSS/error:Nothing to download")
     exit
@@ -52,8 +52,8 @@ foreach ($sourceFile in $NexssStdout.files) {
 
     $targetPath = Join-Path -Path $downloadsFolder -ChildPath $sourceFileName  
 
-    if ((Test-Path $targetPath) -and !($NexssStdout.nocache)) {
-        [Console]::Error.WriteLine("NEXSS/ok:$targetPath already exists.")
+    if ((Test-Path $targetPath) -and !($NexssStdout.downloadNocache)) {
+        [Console]::Error.WriteLine("NEXSS/ok:$targetPath already exists. Use --downloadNocache to re-download.")
     }
     else {
         [Console]::Error.WriteLine("NEXSS/info:Downloading $sourceFile to file location $targetPath")
