@@ -7,7 +7,6 @@
 $NexssStdin = $input
 $NexssStdout = $NexssStdin | ConvertFrom-Json
 
-
 # $env:NEXSS_CACHE_PATH - is default nexss env folder
 # $env:DOWNLOAD_FOLDER - is specified in the config.env of this module
 if ($NexssStdout.cache) {
@@ -17,7 +16,7 @@ else {
     $downloadsFolder = "$($NexssStdout.cwd)/$env:DOWNLOAD_FOLDER"
 }
 
-[Console]::Error.WriteLine("NEXSS/info:Download Folder $downloadsFolder")
+[Console]::Error.WriteLine("NEXSS/info:Download Folder: $downloadsFolder")
 
 $NexssStdout | Add-Member -Force -NotePropertyMembers  @{downloadsFolder = "$downloadsFolder" }
 
@@ -45,7 +44,7 @@ foreach ($sourceFile in $NexssStdout.files) {
     $percentComplete = ($i / $total) * 100
     
     if (!(isURIWeb($sourceFile))) {
-        [Console]::Error.WriteLine("This is not url: $sourceFile") 
+        [Console]::Error.WriteLine("NEXSS/error:This is not url: $sourceFile") 
         exit;
     }
         
@@ -53,15 +52,14 @@ foreach ($sourceFile in $NexssStdout.files) {
 
     $targetPath = Join-Path -Path $downloadsFolder -ChildPath $sourceFileName  
 
-    if (Test-Path $targetPath) {
-        if ($NexssStdout.debug) {
-            [Console]::Error.WriteLine("$targetPath already exists.")
-        } 
+    if ((Test-Path $targetPath) -and !($NexssStdout.nocache)) {
+        [Console]::Error.WriteLine("NEXSS/ok:$targetPath already exists.")
     }
     else {
+        [Console]::Error.WriteLine("NEXSS/info:Downloading $sourceFile to file location $targetPath")
         Write-Progress -Activity "Downloading... ($i/$total)" -Status "File: $sourceFileName" -PercentComplete $percentComplete
         $wc.DownloadFile($sourceFile, $targetPath)
-        [Console]::Error.WriteLine("NEXSS/info: Downloading $sourceFile to file location $targetPath")
+        
     }   
     
     $downloadedPaths += $targetPath
