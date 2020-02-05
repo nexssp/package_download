@@ -17,6 +17,8 @@ else {
     $downloadsFolder = "$($NexssStdout.cwd)/$env:DOWNLOAD_FOLDER"
 }
 
+[Console]::Error.WriteLine("NEXSS/info:Download Folder $downloadsFolder")
+
 $NexssStdout | Add-Member -Force -NotePropertyMembers  @{downloadsFolder = "$downloadsFolder" }
 
 function isURIWeb($address) {
@@ -30,35 +32,49 @@ if ( ! ( Test-Path $downloadsFolder)) {
 
 $wc = New-Object System.Net.WebClient  
 $downloadedPaths = @()
+$total = $NexssStdout.files.Count
+[Console]::Error.WriteLine("NEXSS/info:Starting Download..")
+if ($total -eq 0) {
+    [Console]::Error.WriteLine("NEXSS/error:Nothing to download")
+    exit
+}
+
+$i = 0
 foreach ($sourceFile in $NexssStdout.files) { 
+    $i++
+    $percentComplete = ($i / $total) * 100
+    
     if (!(isURIWeb($sourceFile))) {
-        Write-Host "NEXSS DOWNLOAD: This is not url: $sourceFile"
+        [Console]::Error.WriteLine("This is not url: $sourceFile") 
         exit;
     }
         
-    $sourceFileName = $sourceFile.SubString($sourceFile.LastIndexOf('/') + 1)   
+    $sourceFileName = $sourceFile.SubString($sourceFile.LastIndexOf('/') + 1)
+
     $targetPath = Join-Path -Path $downloadsFolder -ChildPath $sourceFileName  
 
     if (Test-Path $targetPath) {
         if ($NexssStdout.debug) {
-            Write-Host "NEXSS DOWNLOAD: $targetPath already exists." -BackgroundColor Cyan
+            [Console]::Error.WriteLine("$targetPath already exists.")
         } 
     }
     else {
-        if ($NexssStdout.debug) {
-            Write-Host "NEXSS DOWNLOAD: Downloading $sourceFile to file location $targetPath"
-        }
+        Write-Progress -Activity "Downloading... ($i/$total)" -Status "File: $sourceFileName" -PercentComplete $percentComplete
         $wc.DownloadFile($sourceFile, $targetPath)
-        if ($NexssStdout.debug) {            
-            Write-Host "NEXSS DOWNLOAD: Downloaded $sourceFileName." -ForegroundColor yellow
-        }
+        [Console]::Error.WriteLine("NEXSS/info: Downloading $sourceFile to file location $targetPath")
     }   
     
     $downloadedPaths += $targetPath
 } 
+if ( $downloadedPaths) {
+    $NexssStdout | Add-Member -Force -NotePropertyMembers  @{files = $downloadedPaths }
+}
+else {
+    $NexssStdout.PSObject.Properties.Remove("files")
+}
 
-$NexssStdout | Add-Member -Force -NotePropertyMembers  @{downloadedPaths = $downloadedPaths }
+# Because downloaded files are just files we call them files so they can be easy pass without parameters to the nexss module.
+# Of course you can always rename data by using nexss Data/Rename etc..
 
-$NexssStdout | Add-Member -Force -NotePropertyMembers  @{"files" = @() }
 # STDOUT
 Write-Host 	(ConvertTo-Json -Compress $NexssStdout)
