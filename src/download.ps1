@@ -69,7 +69,11 @@ if ( $downloadedPaths) {
 }
 else {
     $NexssStdout.PSObject.Properties.Remove("files")
+    
 }
+
+$NexssStdout.PSObject.Properties.Remove("downloadPathCache")
+
 
 # Because downloaded files are just files we call them files so they can be easy pass without parameters to the nexss module.
 # Of course you can always rename data by using nexss Data/Rename etc..
