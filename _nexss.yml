@@ -1,7 +1,4 @@
 name: Download
 debug: false
-input:
-  - name: files
-    required: "file parameter is required."
 files:
   - name: src/download.ps1

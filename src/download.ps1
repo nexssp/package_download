@@ -1,50 +1,51 @@
-# Nexss PROGRAMMER 2.0.0 - PowerShell
-# Default template for JSON Data
-# STDIN
-[Console]::OutputEncoding = [Text.UTF8Encoding]::UTF8
-[Console]::InputEncoding = [Text.UTF8Encoding]::UTF8
+# Nexss PROGRAMMER 2.0 - Package Download
+# This one will be removed after package run ends
+$nxsParameters = @("downloadPathCache", "downloadNocache", "downloadFast")
+$input | . "$($env:NEXSS_PACKAGES_PATH)/Nexss/Lib/NexssIn.ps1"
 
-$NexssStdin = $input
-$NexssStdout = $NexssStdin | ConvertFrom-Json
 
+# Get isURIWeb
+. "$($env:NEXSS_PACKAGES_PATH)/Nexss/Lib/Validate.ps1"
 # $env:NEXSS_CACHE_PATH - is default nexss env folder
 # $env:DOWNLOAD_FOLDER - is specified in the config.env of this module
 if ($NexssStdout.downloadPathCache) {
     $downloadsFolder = "$env:NEXSS_CACHE_PATH\$env:DOWNLOAD_FOLDER\"
 }
 else {
-    $downloadsFolder = "$($NexssStdout.cwd)/$env:DOWNLOAD_FOLDER"
+    if ($NexssStdout.destinationFolder) {
+        $downloadsFolder = "$($NexssStdout.destinationFolder)"
+    }
+    else {
+        $downloadsFolder = "$($NexssStdout.cwd)"
+    }
 }
 
-[Console]::Error.WriteLine("NEXSS/info:Download Folder: $downloadsFolder")
-
-$NexssStdout | Add-Member -Force -NotePropertyMembers  @{downloadsFolder = "$downloadsFolder" }
-
-function isURIWeb($address) {
-    $uri = $address -as [System.URI]
-    $uri.AbsoluteURI -ne $null -and $uri.Scheme -match '[http|https]'
-}
-
-if ( ! ( Test-Path $downloadsFolder)) {    
+if ( ! ( Test-Path $downloadsFolder)) {
+    nxsInfo("Creating download Folder: $downloadsFolder")    
     New-Item -ItemType "directory" -Path $downloadsFolder | Out-Null
 }
 
+nxsInfo("Download Folder: $downloadsFolder")
+$NexssStdout | Add-Member -Force -NotePropertyMembers  @{downloadsFolder = "$downloadsFolder" }
+
 $wc = New-Object System.Net.WebClient  
 $downloadedPaths = @()
-$total = $NexssStdout.files.Count
-[Console]::Error.WriteLine("NEXSS/info:Starting Download $total files(s)..")
+$total = $inFieldValue_1.Count
+
 if ($total -eq 0) {
-    [Console]::Error.WriteLine("NEXSS/error:Nothing to download")
+    nxsError("NEXSS/error:Nothing to download")
     exit
 }
 
+nxsInfo("Starting Download $total files(s)..")
+
 $i = 0
-foreach ($sourceFile in $NexssStdout.files) { 
+foreach ($sourceFile in $inFieldValue_1) { 
     $i++
     $percentComplete = ($i / $total) * 100
     
     if (!(isURIWeb($sourceFile))) {
-        [Console]::Error.WriteLine("NEXSS/error:This is not url: $sourceFile") 
+        nxsError("This is not url: $sourceFile") 
         exit;
     }
         
@@ -53,30 +54,30 @@ foreach ($sourceFile in $NexssStdout.files) {
     $targetPath = Join-Path -Path $downloadsFolder -ChildPath $sourceFileName  
 
     if ((Test-Path $targetPath) -and !($NexssStdout.downloadNocache)) {
-        [Console]::Error.WriteLine("NEXSS/ok:$targetPath already exists. Use --downloadNocache to re-download.")
+        nxsOk("$targetPath already exists. Use --downloadNocache to re-download.")
     }
     else {
-        [Console]::Error.WriteLine("NEXSS/info:Downloading $sourceFile to file location $targetPath")
-        Write-Progress -Activity "Downloading... ($i/$total)" -Status "File: $sourceFileName" -PercentComplete $percentComplete
-        $wc.DownloadFile($sourceFile, $targetPath)
-        
+        nxsInfo("Downloading $sourceFile to file location $targetPath")
+        Write-Progress -Activity "Downloading... ($i/$total)" -Status "File: $sourceFileName" #-PercentComplete $percentComplete
+        if ($NexssStdout.downloadFast) {
+            $meassure = Measure-Command { $wc.DownloadFile($sourceFile, $targetPath) }
+        }
+        else {
+            $meassure = Measure-Command { Invoke-WebRequest -Uri $sourceFile -OutFile $targetPath }
+        }
+
+        nxsOk("Downloaded in $($meassure.Seconds) s. Use --downloadFast for faster downloading, but without download progress information.")
+        $NexssStdout | Add-Member -Force -NotePropertyMembers  @{downloadSeconds = $meassure.Seconds }
     }   
     
     $downloadedPaths += $targetPath
 } 
 if ( $downloadedPaths) {
-    $NexssStdout | Add-Member -Force -NotePropertyMembers  @{files = $downloadedPaths }
+    $NexssStdout | Add-Member -Force -NotePropertyMembers  @{"$resultField_1" = $downloadedPaths }
 }
 else {
-    $NexssStdout.PSObject.Properties.Remove("files")
+    $NexssStdout.PSObject.Properties.Remove($resultField_1)
     
 }
 
-$NexssStdout.PSObject.Properties.Remove("downloadPathCache")
-
-
-# Because downloaded files are just files we call them files so they can be easy pass without parameters to the nexss module.
-# Of course you can always rename data by using nexss Data/Rename etc..
-
-# STDOUT
-Write-Host 	(ConvertTo-Json -Compress $NexssStdout)
+. "$($env:NEXSS_PACKAGES_PATH)/Nexss/Lib/NexssOut.ps1"

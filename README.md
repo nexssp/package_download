@@ -12,6 +12,12 @@ nexss Download --files=https://prdownloads.sourceforge.net/tcl/tcl8610-src.zip -
 # 'downloads' is setup in the config.env
 ```
 
+```ps1
+# Example Download file and run
+$NexssDownloadInfo = $(nexss Download --files=http://repo.msys2.org/distrib/x86_64/msys2-x86_64-20190524.exe) | ConvertFrom-Json
+& $NexssDownloadInfo.files
+```
+
 ## Parameters
 
 **--downloadPathCache** - will download to the cache folder (not the current folder)
