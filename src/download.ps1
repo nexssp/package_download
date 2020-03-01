@@ -12,8 +12,8 @@ if ($NexssStdout.downloadPathCache) {
     $downloadsFolder = "$env:NEXSS_CACHE_PATH\$env:DOWNLOAD_FOLDER\"
 }
 else {
-    if ($NexssStdout.destinationFolder) {
-        $downloadsFolder = "$($NexssStdout.destinationFolder)"
+    if ($NexssStdout.downloadsFolder) {
+        $downloadsFolder = "$($NexssStdout.downloadsFolder)"
     }
     else {
         $downloadsFolder = "$($NexssStdout.cwd)"
