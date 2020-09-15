@@ -36,11 +36,6 @@ $NexssStdout | Add-Member -Force -NotePropertyMembers  @{downloadsFolder = "$dow
 
 $wc = New-Object System.Net.WebClient  
 $downloadedPaths = @()
-
-if (!$inFieldValue_1) {
-    $inFieldValue_1 = $NexssStdout.files
-}
-
 $total = $inFieldValue_1.Count
 
 if ($total -eq 0) {
@@ -51,9 +46,6 @@ if ($total -eq 0) {
 nxsInfo("Starting Download $total files(s)..")
 
 $i = 0
-
-
-
 foreach ($sourceFile in $inFieldValue_1) { 
     $i++
     $percentComplete = ($i / $total) * 100
