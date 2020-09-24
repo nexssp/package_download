@@ -37,8 +37,8 @@ then
             
             filename="${url##*/}" # get base url
             item="$downloadsFolder/$filename"            
-
-            curl $url --create-dirs -o $item 2>&1 #/dev/null
+            # -L - follow the redirections
+            curl -s -L $url --create-dirs -o $item #2>&1 #/dev/null
 
             arr+=( $item )
         else        
