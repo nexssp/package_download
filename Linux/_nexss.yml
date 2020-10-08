@@ -2,3 +2,5 @@ name: Download
 debug: false
 files:
   - name: src/download.sh
+errors:
+  "Cannot iterate over null (null)": "This happen when for example jq trying to get array which does not exist."

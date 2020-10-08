@@ -24,28 +24,44 @@ then
 
     echo "NEXSS/ok:Downloads folder $downloadsFolder">&2
 
-    downloads=$(echo "$NexssStdin"|jq -r '.nxsIn[]')
-    [[ -z $downloads ]] && echo "NEXSS/error:Nothing to download">&2
+    downloads=$(echo "$NexssStdin"|jq -r '.nxsIn[]?')
+    
+    if [[ -z $downloads ]]
+    then 
+        echo "NEXSS/error:Nothing to download">&2
+        NexssStdout=$(echo "$NexssStdin"|jq ".nxsStop=1")
+        
+    else    
+        
+        downloadNocache=$(echo "$NexssStdin"|jq -r '.downloadNocache')
 
-    regex='^(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]\.[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]$'
-    arr=()
-    for url in $downloads
-    do
-        if [[ $url =~ $regex ]] 
-        then
-            echo "NEXSS/info:Downloading $url..">&2
-            
-            filename="${url##*/}" # get base url
-            item="$downloadsFolder/$filename"            
-            # -L - follow the redirections
-            curl -s -L $url --create-dirs -o $item #2>&1 #/dev/null
+        regex='^(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]\.[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]$'
+        arr=()
+        for url in $downloads
+        do
+            if [[ $url =~ $regex ]]
+            then
+                filename="${url##*/}" # get base url
+                item="$downloadsFolder/$filename"      
+                if [ -f $tem ]
+                then
+                    echo "NEXSS/info:File $item already exists. Use --downloadNocache to reupload">&2
+                else
+                    echo "NEXSS/info:Downloading $url..">&2
+                fi
+                [ -f $tem ] && rm $item
 
-            arr+=( $item )
-        else        
-            echo "NEXSS/error:Item $url is not valid url!!">&2
-        fi
-    done
-    NexssStdout=$(echo "$NexssStdin"|jq "del(.nxsIn)")
+                # -L - follow the redirections
+                curl -s -L $url --create-dirs -o $item #2>&1 #/dev/null
+
+                arr+=( $item )
+            else        
+                echo "NEXSS/error:Item $url is not valid url!!">&2
+                NexssStdout=$(echo "$NexssStdin"|jq ".nxsStop=1")
+            fi
+        done
+    fi
+    NexssStdout=$(echo "$NexssStdout"|jq "del(.nxsIn)")
     NexssStdout=$(echo "$NexssStdout"|jq ".nxsOut = \"$arr\"")
 else    
     echo "NEXSS/error:Stream is empty, did you pass anything to the stream?">&2

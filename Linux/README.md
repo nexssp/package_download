@@ -1,6 +1,6 @@
 # Nexss PROGRAMMER 2.0
 
-Downloads files from Web.
+Downloads files from the Internet.
 
 ## Examples
 
@@ -23,5 +23,4 @@ $NexssDownloadInfo = $(nexss Download --files=http://repo.msys2.org/distrib/x86_
 ## Parameters
 
 **--downloadPathCache** - will download to the cache folder (not the current folder)  
-**--donwloadNocache** - will not use cache and re-download if already exists.  
-**--downloadFast** - for faster downloads (but without progress bar)
+**--downloadNocache** - will not use cache and re-download if already exists.
